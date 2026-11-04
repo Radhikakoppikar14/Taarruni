@@ -180,7 +180,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: iridShift 16s ease-in-out infinite alternate;
 }
 @keyframes iridShift {
   from { background-position: 0% 50%; }
@@ -348,39 +347,18 @@
       Framer Motion / Tilt3D transforms. */
 .rv {
   opacity: 0;
-  translate: 0 38px;
-  scale: 0.965;
+  translate: 0 16px;
   transition:
-    opacity 0.9s var(--ease-out-expo),
-    translate 1s var(--ease-out-expo),
-    scale 1s var(--ease-out-expo);
+    opacity 0.6s ease-out,
+    translate 0.6s ease-out;
   transition-delay: var(--rv-delay, 0ms);
-  will-change: opacity, translate, scale;
 }
 .rv.rv-in {
   opacity: 1;
   translate: 0 0;
-  scale: 1;
 }
 
-/* 2. The soft colour glows now drift slowly instead of sitting still */
-@keyframes orbDriftA {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(8vmax, 5vmax, 0) scale(1.15); }
-}
-@keyframes orbDriftB {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(-9vmax, -6vmax, 0) scale(1.12); }
-}
-@keyframes orbDriftC {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  33% { transform: translate3d(-7vmax, 6vmax, 0) scale(1.2); }
-  66% { transform: translate3d(6vmax, -5vmax, 0) scale(0.9); }
-}
-.ambient-orb { will-change: transform; }
-.ambient-orb--a { animation: orbDriftA 16s ease-in-out infinite; }
-.ambient-orb--b { animation: orbDriftB 20s ease-in-out infinite; }
-.ambient-orb--c { animation: orbDriftC 24s ease-in-out infinite; }
+/* 2. Colour glows stay static (drift animation removed – lighter page). */
 
 /* 3. Cards: lift + coloured glow on hover */
 .holo-border-wrap {
@@ -394,26 +372,44 @@
     0 18px 40px -26px color-mix(in srgb, var(--accent-cyan) 55%, transparent);
 }
 
-/* 4. Gentle floating for illustrations inside cards */
-@keyframes floatY {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -8px; }
-}
-.holo-border-wrap svg:first-of-type,
-.holo-border-wrap img:first-of-type {
-  animation: floatY 6s ease-in-out infinite;
-}
-
-/* 5. Glossy shimmer that travels across the main gradient buttons */
-@keyframes btnShimmer {
-  0% { left: -60%; }
-  60%, 100% { left: 130%; }
-}
-.btn-shine-sweep::after { animation: btnShimmer 4.5s ease-in-out infinite; }
+/* 4/5. Card-icon floating and the looping button shimmer were removed.
+        The shine still sweeps once on hover (see .btn-shine-sweep above). */
 
 @media (prefers-reduced-motion: reduce) {
   .rv { opacity: 1 !important; translate: none !important; scale: 1 !important; transition: none !important; }
-  .holo-border-wrap svg:first-of-type,
-  .holo-border-wrap img:first-of-type,
-  .btn-shine-sweep::after { animation: none !important; }
 }
+/* =========================================================================
+   CALM MOTION – decorative infinite loops switched off site-wide.
+   Hover effects and one-time entrance animations are kept.
+   (!important is needed because these classes are defined in component
+   <style> tags / inline styles that load after this file.)
+========================================================================= */
+
+/* SectionArt illustrations: keep the one-time draw / bar-rise, stop the loops */
+.sa-float, .sa-pulse, .sa-type, .sa-blink, .sa-spin, .sa-spin-slow,
+.sa-beam, .sa-shine, .sa-root:hover .sa-twinkle { animation: none !important; }
+.sa-shine { opacity: 0 !important; }
+
+/* AI visuals */
+.aiv-pulse, .aiv-float { animation: none !important; }
+.aiv-pulse { opacity: 0.7; }
+
+/* About page */
+.ab-wave, .ab-cycle, .ab-spin, .ab-spin-slow, .ab-core, .ab-layer,
+.ab-float, .ab-pulse, .ab-blink { animation: none !important; }
+.ab-travel { animation: none !important; opacity: 0 !important; }
+.ab-orbit { animation: none !important; transform: rotateY(var(--a)); }
+.ab-face  { animation: none !important; transform: translateZ(190px) rotateY(calc(var(--a) * -1)); }
+
+/* Service-page 3D decoration (cube, rings, orbs) – shown as a still */
+.fx-cube { animation: none !important; transform: rotateX(-20deg) rotateY(35deg); }
+.fx-spin, .fx-bob { animation: none !important; }
+
+/* Testimonials: static avatar ring + static equalizer bars */
+[style*="spinConic"] { animation: none !important; }
+[style*="vwEq"] { animation: none !important; transform: scaleY(0.55); }
+[style*="vwEq"]:nth-child(3n)   { transform: scaleY(0.85); }
+[style*="vwEq"]:nth-child(3n+1) { transform: scaleY(0.35); }
+
+/* Tailwind spinners used as decoration */
+.animate-spin.border-dashed { animation: none !important; } /* decorative only – real loading spinners keep spinning */

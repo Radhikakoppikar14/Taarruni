@@ -84,19 +84,105 @@ const CLIENT_LOGOS: [string, string][] = [
 ];
 
 /**
- * Logos are plain <img> elements (CSS 3D, not WebGL), so they load from any origin.
- * Your own copy in /public/images/clients is tried first, then the live site; if both
- * fail, the tile shows the client name instead.
+ * FAST LOGO LOADING
+ * ---------------------------------------------------------------------------
+ * Before: every tile tried `/images/clients/x.jpg` first and only fell back to
+ * the live site after that request failed — 76 wasted requests (on most hosts
+ * a missing file returns the whole index.html), then 76 more. Lazy loading
+ * also held back tiles because the browser can't judge "near viewport" on a
+ * rotating 3D cylinder, so logos popped in one by one.
+ *
+ * Now:
+ *  1. ONE probe decides where logos live (local /public copy or live site),
+ *     and every tile uses that source directly – no double requests.
+ *  2. A preconnect to the live site is opened early.
+ *  3. Logos are warmed into the browser cache in the background once the
+ *     page has finished loading, so the Clients page shows them instantly.
+ *  4. Tiles show a light placeholder and fade the logo in when ready.
  */
-const LOGO_SOURCES = (file: string) => [
-  `/images/clients/${file}.jpg`,
-  `https://www.taarruni.com/images/clients/${file}.jpg`,
-];
+const LOCAL_BASE = '/images/clients/';
+const REMOTE_BASE = 'https://www.taarruni.com/images/clients/';
 
-const LogoImage: React.FC<{ file: string; name: string; className?: string }> = ({ file, name, className = '' }) => {
-  const sources = LOGO_SOURCES(file);
-  const [i, setI] = useState(0);
-  if (i >= sources.length) {
+let basePromise: Promise<string> | null = null;
+const resolveLogoBase = (): Promise<string> => {
+  if (basePromise) return basePromise;
+  basePromise = new Promise((resolve) => {
+    const probe = new Image();
+    const timer = window.setTimeout(() => resolve(REMOTE_BASE), 1500);
+    probe.onload = () => {
+      window.clearTimeout(timer);
+      // a real image has a size; an HTML fallback page would have fired onerror
+      resolve(probe.naturalWidth > 0 ? LOCAL_BASE : REMOTE_BASE);
+    };
+    probe.onerror = () => {
+      window.clearTimeout(timer);
+      resolve(REMOTE_BASE);
+    };
+    probe.src = `${LOCAL_BASE}${CLIENT_LOGOS[0][0]}.jpg`;
+  });
+  return basePromise;
+};
+
+const addPreconnect = () => {
+  if (document.querySelector('link[data-logo-preconnect]')) return;
+  const link = document.createElement('link');
+  link.rel = 'preconnect';
+  link.href = 'https://www.taarruni.com';
+  link.crossOrigin = '';
+  link.setAttribute('data-logo-preconnect', '');
+  document.head.appendChild(link);
+};
+
+let warmed = false;
+/** Downloads all logos into the browser cache in the background (low priority). */
+export const preloadClientLogos = () => {
+  if (warmed || typeof window === 'undefined') return;
+  warmed = true;
+  addPreconnect();
+  resolveLogoBase().then((base) => {
+    CLIENT_LOGOS.forEach(([file]) => {
+      const img = new Image();
+      img.decoding = 'async';
+      (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'low';
+      img.src = `${base}${file}.jpg`;
+    });
+  });
+};
+
+// Warm the cache after the current page has fully loaded, when the browser is idle.
+if (typeof window !== 'undefined') {
+  const start = () => {
+    const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback;
+    if (idle) idle(preloadClientLogos);
+    else window.setTimeout(preloadClientLogos, 1200);
+  };
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start, { once: true });
+}
+
+const useLogoBase = () => {
+  const [base, setBase] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    addPreconnect();
+    resolveLogoBase().then((b) => alive && setBase(b));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return base;
+};
+
+const LogoImage: React.FC<{ file: string; name: string; base: string | null; className?: string }> = ({
+  file,
+  name,
+  base,
+  className = '',
+}) => {
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  if (failed) {
     return (
       <span className="w-full h-full flex items-center justify-center p-2 text-center font-display text-[11px] font-black text-[#0b1220] leading-tight">
         {name}
@@ -104,15 +190,25 @@ const LogoImage: React.FC<{ file: string; name: string; className?: string }> = 
     );
   }
   return (
-    <img
-      src={sources[i]}
-      alt={name}
-      loading="lazy"
-      decoding="async"
-      draggable={false}
-      onError={() => setI((n) => n + 1)}
-      className={`w-full h-full object-contain select-none ${className}`}
-    />
+    <span className="relative block w-full h-full">
+      {/* light placeholder until the logo arrives */}
+      {!loaded && <span aria-hidden="true" className="absolute inset-1 rounded-md" style={{ background: '#eef2f8' }} />}
+      {base && (
+        <img
+          src={`${base}${file}.jpg`}
+          alt={name}
+          width={CARD_W}
+          height={CARD_H}
+          loading="eager"
+          decoding="async"
+          draggable={false}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          className={`relative w-full h-full object-contain select-none ${className}`}
+          style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
+        />
+      )}
+    </span>
   );
 };
 
@@ -134,6 +230,7 @@ const LogoCylinder: React.FC<{ filter: string }> = ({ filter }) => {
 
   const rows = Math.ceil(CLIENT_LOGOS.length / PER_ROW);
   const q = filter.trim().toLowerCase();
+  const logoBase = useLogoBase();
 
   useEffect(() => {
     const wrap = wrapRef.current!;
@@ -179,7 +276,7 @@ const LogoCylinder: React.FC<{ filter: string }> = ({ filter }) => {
     wrap.addEventListener('pointercancel', up);
     wrap.addEventListener('pointerleave', leave);
 
-    // Replay the swell-in + fast-spin entrance whenever the cylinder scrolls back into view
+    // Soft fade-in whenever the cylinder scrolls back into view
     let visible = false;
     const io = new IntersectionObserver(
       (entries) => {
@@ -201,13 +298,13 @@ const LogoCylinder: React.FC<{ filter: string }> = ({ filter }) => {
       }
       const s = state.current;
 
-      // Entrance (replays every time the page is opened): swells in while spinning fast, then settles
+      // Entrance: simple fade-in
       s.t = Math.min(1, s.t + dt / 1.0);
       const e = 1 - Math.pow(1 - s.t, 3);
-      const intro = reduce ? 1 : 0.35 + 0.65 * e;
+      const intro = 1; // no swell-in
 
       if (!s.dragging) {
-        s.rot += dt * ((reduce ? 0 : 6) + (1 - e) * 40) + s.vel * dt * 6;
+        s.rot += dt * (reduce ? 0 : 4) + s.vel * dt * 6; // slow, steady rotation only
         s.vel *= Math.pow(0.04, dt);
       }
       s.tiltX += (s.tiltTarget - s.tiltX) * Math.min(1, dt * 4);
@@ -301,7 +398,7 @@ const LogoCylinder: React.FC<{ filter: string }> = ({ filter }) => {
                     filter: active ? 'none' : 'grayscale(1)',
                   }}
                 >
-                  <LogoImage file={file} name={name} />
+                  <LogoImage file={file} name={name} base={logoBase} />
                 </div>
               </div>
             );
