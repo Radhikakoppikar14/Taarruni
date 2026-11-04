@@ -10,9 +10,6 @@ import * as THREE from 'three';
  *   - camera drifts with mouse + scroll for real depth
  * Transparent layer above the liquid shader, below all page content.
  * Off for prefers-reduced-motion, pauses when tab hidden, fully disposed.
- *
- * Lightweight settings: 3 ribbons (2 on mobile), low segment count, capped
- * pixel ratio and a 30 fps frame cap, with soft, slow ribbons.
  */
 
 interface RibbonOpts {
@@ -103,13 +100,13 @@ export const Background3D: React.FC = () => {
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'low-power' });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
       return;
     }
 
     const isMobile = window.innerWidth < 768;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.style.cssText = 'width:100%;height:100%;display:block';
@@ -128,14 +125,18 @@ export const Background3D: React.FC = () => {
     const uMouse = { value: new THREE.Vector2(0, 0) };
 
     const ribbonsDef: RibbonOpts[] = [
-      // one wide soft ribbon and two fine silky lines
-      { y: -5.0, z: -4, width: 3.0, phase: 0.0, speed: 0.35, amp: 2.4, alpha: 0.09, hue: 0.0,  twist: 0.14 },
-      { y: -3.2, z:  1, width: 0.40, phase: 1.0, speed: 0.45, amp: 2.8, alpha: 0.16, hue: 0.20, twist: 0.18 },
-      { y:  3.8, z: -6, width: 0.32, phase: 4.0, speed: 0.40, amp: 2.4, alpha: 0.13, hue: 0.62, twist: 0.20 },
+      // wide soft ribbons
+      { y: -6.5, z: -2, width: 3.4, phase: 0.0, speed: 0.55, amp: 2.4, alpha: 0.13, hue: 0.0,  twist: 0.16 },
+      { y: -2.0, z: -8, width: 3.0, phase: 2.1, speed: 0.45, amp: 2.8, alpha: 0.10, hue: 0.33, twist: 0.12 },
+      { y:  4.5, z: -12, width: 2.6, phase: 4.2, speed: 0.50, amp: 2.2, alpha: 0.08, hue: 0.66, twist: 0.14 },
+      // fine silky lines
+      { y: -4.2, z:  2, width: 0.45, phase: 1.0, speed: 0.70, amp: 3.0, alpha: 0.23, hue: 0.15, twist: 0.20 },
+      { y:  0.5, z: -4, width: 0.35, phase: 3.0, speed: 0.60, amp: 3.4, alpha: 0.20, hue: 0.50, twist: 0.18 },
+      { y:  6.5, z: -6, width: 0.30, phase: 5.0, speed: 0.65, amp: 2.6, alpha: 0.17, hue: 0.80, twist: 0.22 },
     ];
-    const list = isMobile ? ribbonsDef.filter((_, i) => i !== 2) : ribbonsDef;
+    const list = isMobile ? ribbonsDef.filter((_, i) => i % 2 === 0) : ribbonsDef;
 
-    const SEGMENTS = isMobile ? 70 : 110;
+    const SEGMENTS = isMobile ? 160 : 280;
     const materials: THREE.ShaderMaterial[] = [];
     const geometries: THREE.BufferGeometry[] = [];
 
@@ -193,14 +194,10 @@ export const Background3D: React.FC = () => {
     // ---- Loop -------------------------------------------------------------
     const clock = new THREE.Clock();
     let animId = 0;
-    const FRAME_MS = 1000 / 30;
-    let lastDraw = 0;
-    const render = (now = 0) => {
+    const render = () => {
       animId = requestAnimationFrame(render);
       clock.getDelta();
       if (document.hidden) return;
-      if (now - lastDraw < FRAME_MS) return;
-      lastDraw = now;
 
       uTime.value = clock.elapsedTime;
       mouse.lerp(mouseTarget, 0.05);
