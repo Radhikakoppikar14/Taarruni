@@ -19,7 +19,7 @@ import { ClientsCylinder3D } from '../components/ClientsCylinder3D';
 import { TestimonialsCoverflow3D } from '../components/TestimonialsCoverflow3D';
 import { PortfolioShaderTiles } from '../components/PortfolioShaderTiles';
 import { ProcessTimeline3D } from '../components/ProcessTimeline3D';
-import { LiquidHeroBlob } from '../components/LiquidHeroBlob';
+import { HeroServicesScene } from '../components/HeroServicesScene';
 import { SectionArt } from '../components/SectionArt';
 import { StudioHub } from '../components/StudioHub';
 
@@ -73,7 +73,7 @@ export const HomePage: React.FC<PageProps> = ({ onNavigate, onOpenQuickContact }
               </div>
             </motion.div>
 
-            {/* Right Noise-Displaced Liquid Metal Blob (5 cols) */}
+            {/* Right: services 3D scene – website, app, growth chart, billboard (5 cols) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -81,7 +81,7 @@ export const HomePage: React.FC<PageProps> = ({ onNavigate, onOpenQuickContact }
               transition={{ duration: 0.8, delay: 0.2 }}
               className="lg:col-span-5 flex justify-center"
             >
-              <LiquidHeroBlob />
+              <HeroServicesScene />
             </motion.div>
 
           </div>

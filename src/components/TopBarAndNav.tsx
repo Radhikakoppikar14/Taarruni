@@ -7,7 +7,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   ExternalLink,
-  Phone,
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import { FacebookIcon, TwitterIcon, LinkedInIcon, WhatsAppIcon } from './SocialIcons';
@@ -31,9 +30,9 @@ const MAIN_LINKS = [
 ];
 
 const SERVICE_COLS = [
-  { no: '01', title: 'Marketing', color: '#3ef0ff', route: 'marketing', links: [['Digital / Online Marketing', 'marketing/online'], ['Traditional / Offline Marketing', 'marketing']] },
-  { no: '02', title: 'All India Branding', color: '#ff2e88', route: 'branding', links: [['Internal Signage', 'branding'], ['External Signage', 'branding'], ['Hoardings & Billboards', 'branding'], ['Outdoor Retail Branding', 'branding']] },
-  { no: '03', title: 'IT Services', color: '#ffd36b', route: 'it', links: [['CMS Development', 'it'], ['E-Commerce Development', 'it'], ['Architectural and Civil', 'it']] },
+  { no: '01', title: 'Marketing', color: '#3ef0ff', ink: '#0b8fa8', num: '#12b8d8', route: 'marketing', links: [['Digital / Online Marketing', 'marketing/online'], ['Traditional / Offline Marketing', 'marketing']] },
+  { no: '02', title: 'All India Branding', color: '#ff2e88', ink: '#c4145f', num: '#ff2e88', route: 'branding', links: [['Internal Signage', 'branding'], ['External Signage', 'branding'], ['Hoardings & Billboards', 'branding'], ['Outdoor Retail Branding', 'branding']] },
+  { no: '03', title: 'IT Services', color: '#ffd36b', ink: '#a86500', num: '#f5b000', route: 'it', links: [['CMS Development', 'it'], ['E-Commerce Development', 'it'], ['Architectural and Civil', 'it']] },
 ];
 
 const MORE_LINKS = [
@@ -124,7 +123,7 @@ export const TopBarAndNav: React.FC<TopBarAndNavProps> = ({ currentRoute, onNavi
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4" onMouseLeave={() => setOpenMenu(null)}>
                       <motion.div
                         {...unfold}
-                        style={{ background: 'color-mix(in srgb, var(--bg-surface) 96%, transparent)', borderColor: 'rgb(var(--fg-rgb) / 0.14)' }}
+                        style={{ background: '#ffffff', borderColor: 'rgb(var(--fg-rgb) / 0.14)' }}
                         className="w-[780px] rounded-2xl border p-3 shadow-xl"
                       >
                         <div className="grid grid-cols-3 gap-3">
@@ -132,10 +131,9 @@ export const TopBarAndNav: React.FC<TopBarAndNavProps> = ({ currentRoute, onNavi
                             <div
                               key={c.title}
                               className="relative overflow-hidden rounded-2xl p-5 border"
-                              style={{ borderColor: 'rgb(var(--fg-rgb) / 0.1)', background: `linear-gradient(180deg, ${c.color}1c, transparent 60%)` }}
+                              style={{ borderColor: 'rgb(var(--fg-rgb) / 0.1)', background: `linear-gradient(180deg, ${c.color}1c, #ffffff 60%), #ffffff` }}
                             >
-                              <span className="absolute -right-2 -top-4 font-display text-7xl font-black select-none" style={{ color: `${c.color}22` }}>{c.no}</span>
-                              <button onClick={() => go(c.route)} className="relative flex items-center gap-1.5 font-display text-sm font-black cursor-pointer" style={{ color: c.color }}>
+                              <button onClick={() => go(c.route)} className="relative flex items-center gap-1.5 font-display text-sm font-black cursor-pointer" style={{ color: c.ink }}>
                                 {c.title}
                                 <ArrowUpRight className="w-4 h-4" />
                               </button>
@@ -218,15 +216,6 @@ export const TopBarAndNav: React.FC<TopBarAndNavProps> = ({ currentRoute, onNavi
 
         {/* Right actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={onOpenQuickContact}
-            className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center border cursor-pointer transition-colors hover:border-[#3ef0ff] hover:text-[#3ef0ff]"
-            style={{ borderColor: 'rgb(var(--fg-rgb) / 0.2)', color: 'var(--text-soft)' }}
-            aria-label="Quick contact"
-            title="Quick contact"
-          >
-            <Phone className="w-4 h-4" />
-          </button>
           <button
             onClick={() => go('quote')}
             className="hidden sm:flex items-center gap-1.5 h-10 px-5 rounded-full text-black text-[11px] font-display font-black uppercase tracking-wider cursor-pointer"

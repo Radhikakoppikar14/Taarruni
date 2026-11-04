@@ -105,8 +105,8 @@ export const LiquidChromeBackground: React.FC = () => {
         float fluid = n1 * 0.58 + n2 * 0.42;
         
         // Liquid Chrome Base Color (Dark graphite with specular iridescent highlights)
-        vec3 graphite = mix(vec3(0.047, 0.051, 0.063), vec3(0.933, 0.949, 0.976), uTheme); // #0c0d10 -> #eef2f9
-        vec3 deepSurface = mix(vec3(0.086, 0.094, 0.114), vec3(0.835, 0.878, 0.953), uTheme); // #16181d -> pearl blue
+        vec3 graphite = mix(vec3(0.047, 0.051, 0.063), vec3(0.980, 0.986, 0.997), uTheme); // #0c0d10 -> near-white
+        vec3 deepSurface = mix(vec3(0.086, 0.094, 0.114), vec3(0.925, 0.952, 0.990), uTheme); // #16181d -> very light pearl blue
         
         // Iridescent Highlights: Cyan, Magenta, Gold (softer pastels by day)
         vec3 cyan = mix(vec3(0.243, 0.941, 1.0), vec3(0.20, 0.75, 0.92), uTheme);
@@ -122,11 +122,11 @@ export const LiquidChromeBackground: React.FC = () => {
         float specular = pow(clamp(fluid * 0.5 + 0.5, 0.0, 1.0), 4.5);
         
         vec3 finalColor = mix(graphite, deepSurface, fluid * 0.5 + 0.5);
-        finalColor += iridColor * specular * mix(0.32, 0.20, uTheme);
+        finalColor += iridColor * specular * mix(0.32, 0.13, uTheme);
 
         // Subtle edge vignette (lighter by day)
         vec2 uvCenter = vUv - 0.5;
-        float vignette = 1.0 - dot(uvCenter, uvCenter) * mix(0.6, 0.22, uTheme);
+        float vignette = 1.0 - dot(uvCenter, uvCenter) * mix(0.6, 0.06, uTheme);
         finalColor *= vignette;
 
         gl_FragColor = vec4(finalColor, 1.0);

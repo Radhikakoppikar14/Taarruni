@@ -337,3 +337,83 @@
 :root[data-theme="light"] .bg-black\/40 { background-color: rgb(15 23 42 / .25) }
 :root[data-theme="light"] .shadow-2xl { box-shadow: 0 30px 60px -25px rgb(30 50 100 / .35) }
 :root[data-theme="light"] .shadow-xl { box-shadow: 0 20px 40px -20px rgb(30 50 100 / .30) }
+
+/* =========================================================================
+   MODERN MOTION LAYER
+   (scroll-reveal, drifting colour glow, richer card hover)
+========================================================================= */
+
+/* 1. Scroll reveal – applied/removed by SectionMotion.tsx.
+      Uses individual transform properties so it never clashes with
+      Framer Motion / Tilt3D transforms. */
+.rv {
+  opacity: 0;
+  translate: 0 38px;
+  scale: 0.965;
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    translate 1s var(--ease-out-expo),
+    scale 1s var(--ease-out-expo);
+  transition-delay: var(--rv-delay, 0ms);
+  will-change: opacity, translate, scale;
+}
+.rv.rv-in {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+}
+
+/* 2. The soft colour glows now drift slowly instead of sitting still */
+@keyframes orbDriftA {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(8vmax, 5vmax, 0) scale(1.15); }
+}
+@keyframes orbDriftB {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-9vmax, -6vmax, 0) scale(1.12); }
+}
+@keyframes orbDriftC {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(-7vmax, 6vmax, 0) scale(1.2); }
+  66% { transform: translate3d(6vmax, -5vmax, 0) scale(0.9); }
+}
+.ambient-orb { will-change: transform; }
+.ambient-orb--a { animation: orbDriftA 16s ease-in-out infinite; }
+.ambient-orb--b { animation: orbDriftB 20s ease-in-out infinite; }
+.ambient-orb--c { animation: orbDriftC 24s ease-in-out infinite; }
+
+/* 3. Cards: lift + coloured glow on hover */
+.holo-border-wrap {
+  transition:
+    background-color 0.5s ease,
+    box-shadow 0.5s ease;
+}
+.holo-border-wrap:hover {
+  box-shadow:
+    0 30px 60px -28px color-mix(in srgb, var(--accent-magenta) 45%, transparent),
+    0 18px 40px -26px color-mix(in srgb, var(--accent-cyan) 55%, transparent);
+}
+
+/* 4. Gentle floating for illustrations inside cards */
+@keyframes floatY {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+.holo-border-wrap svg:first-of-type,
+.holo-border-wrap img:first-of-type {
+  animation: floatY 6s ease-in-out infinite;
+}
+
+/* 5. Glossy shimmer that travels across the main gradient buttons */
+@keyframes btnShimmer {
+  0% { left: -60%; }
+  60%, 100% { left: 130%; }
+}
+.btn-shine-sweep::after { animation: btnShimmer 4.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rv { opacity: 1 !important; translate: none !important; scale: 1 !important; transition: none !important; }
+  .holo-border-wrap svg:first-of-type,
+  .holo-border-wrap img:first-of-type,
+  .btn-shine-sweep::after { animation: none !important; }
+}

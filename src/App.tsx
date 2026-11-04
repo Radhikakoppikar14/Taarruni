@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Phone } from 'lucide-react';
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion';
 import { LiquidChromeBackground } from './components/LiquidChromeBackground';
+import { Background3D } from './components/Background3D';
+import { SectionMotion } from './components/SectionMotion';
 import { Preloader } from './components/Preloader';
 import { TopBarAndNav } from './components/TopBarAndNav';
 import { QuickContactModal } from './components/QuickContactModal';
@@ -88,6 +90,12 @@ export default function App() {
 
       {/* Fixed WebGL liquid chrome background (light, reduced cost) */}
       <LiquidChromeBackground />
+
+      {/* Fixed 3D layer: floating shapes, rings & particles with mouse/scroll parallax */}
+      <Background3D />
+
+      {/* Scroll-reveal animation for every section on the current page */}
+      <SectionMotion route={currentRoute} />
 
       {/* 4. Preloader (Assembles wireframe into hero, 0-100 counter) */}
       {!preloaderComplete && (
@@ -219,6 +227,25 @@ export default function App() {
             </motion.button>
           )}
         </AnimatePresence>
+
+        {/* Quick-contact phone button (sits just above WhatsApp) */}
+        {preloaderComplete && (
+          <motion.button
+            key={`ph-${currentRoute}`}
+            onClick={() => setQuickContactOpen(true)}
+            aria-label="Quick contact"
+            title="Quick contact"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut', delay: 0.05 }}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            style={{ color: '#0b1220' }}
+            className="relative w-14 h-14 rounded-full bg-white hover:bg-[#f2fbff] border border-black/10 shadow-2xl flex items-center justify-center cursor-pointer transition-colors duration-300"
+          >
+            <Phone className="w-6 h-6" />
+          </motion.button>
+        )}
 
         {/* Icon-only WhatsApp button (light fade-in, no looping animation). */}
         {preloaderComplete && (
